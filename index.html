@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>가상사례 학습: 이곤란 님 (뇌경색·연하곤란)</title>
+<style>
+:root{--p:#1f5f8b;--bg:#f4f7fa;--ok:#2e7d32;--no:#c62828;--w:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:"Malgun Gothic",sans-serif;background:var(--bg);color:#222;line-height:1.6}
+header{background:var(--p);color:#fff;padding:14px 18px}header h1{margin:0;font-size:1.15rem}
+#bar{height:8px;background:#cfe0ec}#bar i{display:block;height:100%;width:0;background:#f9a825;transition:.4s}
+main{max-width:860px;margin:0 auto;padding:16px}
+.card{background:var(--w);border-radius:10px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px #0002}
+h2{margin-top:0;color:var(--p);font-size:1.1rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem}td,th{border:1px solid #ccd;padding:6px 8px;text-align:left}th{background:#e8f0f6}
+button{background:var(--p);color:#fff;border:0;border-radius:6px;padding:10px 16px;font-size:1rem;cursor:pointer;margin:4px 4px 4px 0}
+button.o{background:#fff;color:var(--p);border:1px solid var(--p)}button:disabled{opacity:.5}
+.opt{display:block;width:100%;text-align:left;background:#fff;color:#222;border:1px solid #b9c7d3}
+.opt.sel{background:#e3f1fb;border-color:var(--p)}.opt.right{background:#e6f4e7;border-color:var(--ok)}.opt.wrong{background:#fdeaea;border-color:var(--no)}
+.fb{margin-top:10px;padding:10px;border-left:4px solid var(--p);background:#eef5fa;display:none}
+.chat{background:#f0f3f6;border-radius:8px;padding:10px;max-height:320px;overflow:auto}
+.m{margin:6px 0;padding:8px 12px;border-radius:12px;max-width:85%}.s{background:#d6ebfa;margin-left:auto}.pt{background:#fff}
+textarea{width:100%;min-height:80px;padding:8px;font:inherit;border:1px solid #aab;border-radius:6px}
+.tag{display:inline-block;background:#e8f0f6;border-radius:12px;padding:2px 10px;margin:2px;font-size:.85rem}.tag.on{background:#c8e6c9}
+.warn{background:#fff4e5;border-left:4px solid #f9a825;padding:8px 12px}
+@media print{button,#bar{display:none}}
+</style></head><body>
+<header><h1>🩺 가상사례 자기주도학습 · 이곤란 님 (뇌경색 후 연하곤란)</h1></header>
+<div id="bar"><i></i></div>
+<main id="app"></main>
+<script>
+const S={step:0,score:{},name:"",log:[]};
+const TOTAL=6;
+const Q=[
+{id:"assess",title:"STEP 1. 연하곤란 사정",max:20,
+ stem:"입원 3일째, 이곤란 님은 의식이 명료하고 지시 수행이 가능합니다. 식사 시작 전 가장 우선적인 간호 활동을 고르세요.",
+ opts:[["바로 일반식을 제공하고 먹는 모습을 관찰한다",0,"흡인 위험이 확인되지 않은 상태에서 일반식 제공은 위험합니다."],
+ ["의식·구강상태·기침반사 확인 후 공식 연하선별검사(예: 물 삼키기 검사)를 시행하고 의사·언어치료사에게 보고한다",20,"정답. 선별검사 후 양성이면 NPO 또는 단계적 식이, 정밀검사(VFSS/FEES)로 연계합니다."],
+ ["가족 말만 듣고 죽을 제공한다",5,"주관적 정보만으로는 부족합니다. 객관적 선별검사가 필요합니다."],
+ ["비위관을 즉시 삽입한다",8,"선별검사 결과와 의사 처방에 따라 결정합니다. 첫 번째 우선 행동은 아닙니다."]],
+ extra:"참고 관찰 단서: 삼킨 후 젖은 목소리(wet voice), 기침, 구강 내 음식 잔류, 흘림, 삼킴 후 SpO₂ 저하."},
+{id:"diet",title:"STEP 2. 식이 단계 결정",max:20,
+ stem:"선별검사에서 묽은 물은 사레가 들렸고, 걸쭉한 형태에서는 안정적이었습니다. VFSS에서 액체 흡인이 확인되었습니다. 적절한 식이는?",
+ opts:[["일반 물·국 제공",0,"액체 흡인이 확인되어 위험합니다."],
+ ["증점제로 점도를 조절한 음료와 다진/연식 형태(IDDSI 기준)를 처방에 따라 제공한다",20,"정답. 점도 조절과 질감 변형이 기본이며 정기적으로 재평가합니다."],
+ ["흡인 걱정으로 무기한 금식시킨다",6,"불필요한 장기 금식은 영양불량·삼킴근 약화를 초래합니다. 재활과 병행이 필요합니다."],
+ ["빨대로 천천히 마시게 한다",3,"빨대는 한 번에 많은 양이 넘어가 흡인 위험이 커질 수 있습니다."]],
+ extra:"영양: 영양 평가(체중, 알부민, 섭취량), 필요 시 영양팀 협진."},
+{id:"pos",title:"STEP 3. 식사 중재 (복수 선택)",max:20,multi:true,
+ stem:"식사 보조 시 올바른 중재를 모두 고르세요. (정답 4개)",
+ opts:[["침상 90°(또는 가능한 한 직립) 좌위, 턱을 가볍게 당긴 자세",5,"✔ 옳습니다. chin tuck은 기도 보호에 도움이 됩니다."],
+ ["한 번에 소량(티스푼 1/2~1)씩, 삼킨 것을 확인한 뒤 다음 입 제공",5,"✔ 옳습니다."],
+ ["식후 30~60분간 상체를 세운 자세 유지, 구강간호 시행",5,"✔ 옳습니다. 역류·잔류물 흡인 예방."],
+ ["편마비 쪽(약한 쪽) 입에 음식을 넣어 감각 자극을 준다",-5,"✘ 건강한 쪽(마비 반대쪽) 입안에 음식을 넣어야 합니다."],
+ ["TV를 틀어 주의를 분산시켜 식사하게 한다",-5,"✘ 조용한 환경에서 식사에 집중해야 합니다."],
+ ["식사를 빨리 끝내도록 재촉하고 물로 헹구며 삼키게 한다",-5,"✘ 천천히, 피로 전 식사 완료. 임의로 물을 사용하지 않습니다."],
+ ["건강한 쪽 입에 음식을 넣고 필요 시 반복 삼킴(dry swallow) 유도",5,"✔ 옳습니다."]]},
+{id:"emerg",title:"STEP 4. 응급 상황",max:20,
+ stem:"식사 중 이곤란 님이 갑자기 말을 못하고 목을 움켜쥐며 청색증이 나타납니다. 즉시 시행할 행동은?",
+ opts:[["물을 먹여 내려보낸다",0,"기도폐쇄 상황에서 절대 금기입니다."],
+ ["도움 요청(응급팀 호출) 후 하임리히법 등 기도폐쇄 처치, 의식 소실 시 CPR로 전환하고 흡인기를 준비한다",20,"정답. 이후 활력징후·SpO₂ 확인, 사건 보고, 의사 보고 및 재평가를 시행합니다."],
+ ["환자를 눕히고 기다린다",0,"즉시 처치가 필요합니다."],
+ ["보호자에게 상황을 설명한 뒤 처치한다",4,"의료진 호출과 처치가 우선입니다."]]},
+{id:"edu",title:"STEP 5. 환자·보호자 교육 (반응형 대화)",max:20,
+ stem:""}
+];
+const KW=[
+ ["자세","똑바로|바로 앉|90|세워|직립|앉아서|앉은|상체|턱|고개"],
+ ["소량","한 숟|조금|소량|티스푼|작은 숟|한입|적게"],
+ ["천천히","천천히|서두르|급하게|꼭꼭|여유"],
+ ["삼킴확인","삼킨 뒤|삼킨 후|삼킨 것|다 삼|비운|확인|두 번 삼|빈 입"],
+ ["점도","점도|걸쭉|농도|증점|되직|묽은|물은 그대로|미음|죽|다진"],
+ ["건강한쪽","건강한 쪽|반대쪽|안 아픈|성한 쪽|좋은 쪽|왼쪽|오른쪽"],
+ ["식후","식후|먹고 난|30분|눕지|바로 눕"],
+ ["구강","양치|구강|입 안 청결|이 닦|입안"],
+ ["징후","사레|기침|목소리|쉰|가래|열|숨|호흡|이상|알려"],
+ ["환경","조용|TV|텔레비전|대화|집중|산만"]
+];
+const KWL={자세:"바른 자세(직립·턱 당김)",소량:"소량씩 제공",천천히:"천천히 식사",삼킴확인:"삼킨 뒤 확인",점도:"점도/음식 형태",건강한쪽:"건강한 쪽으로 음식 넣기",식후:"식후 자세 유지",구강:"구강 위생",징후:"흡인 징후·보고",환경:"조용한 환경"};
+const REPLY={
+ 자세:"“아, 허리를 펴고 턱을 살짝 당기는 거군요. 누워서 먹는 게 편한 줄 알았는데…”",
+ 소량:"“한 숟가락씩 조금만요? 답답하긴 한데… 사레들리는 게 더 무서우니 해볼게요.”",
+ 천천히:"“제가 원래 밥을 빨리 먹는 편인데… 천천히 먹어볼게요.”",
+ 삼킴확인:"“삼켰는지 확인하고 나서 다음 숟가락이요. 알겠습니다.”",
+ 점도:"“물이 걸쭉해지니 맛이 영 별로예요. 그래도 꼭 필요한 건가요?” (공감하며 이유를 설명해 보세요)",
+ 건강한쪽:"“오른쪽이 힘이 없으니 왼쪽으로 먹으면 되겠네요.”",
+ 식후:"“먹고 바로 눕지 말라는 거죠? 그럼 30분은 앉아 있을게요.”",
+ 구강:"“입 안도 닦아야 하나요? 알겠어요.”",
+ 징후:"“사레들리거나 목소리가 이상하면 바로 말씀드리면 되는 거죠?”",
+ 환경:"“TV 보면서 먹는 게 습관인데, 집중해서 먹어야겠네요.”"
+};
+function go(n){S.step=n;render();window.scrollTo(0,0)}
+function bar(){document.querySelector("#bar i").style.width=(S.step/TOTAL*100)+"%"}
+function render(){bar();const a=document.getElementById("app");
+ if(S.step==0)return intro(a);
+ if(S.step<=4)return quiz(a,Q[S.step-1]);
+ if(S.step==5)return edu(a);
+ result(a)}
+function intro(a){a.innerHTML=`
+<div class="card"><h2>📌 학습목표</h2><ol>
+<li>뇌경색 환자의 연하곤란을 사정하고 흡인 위험을 판단한다.</li>
+<li>식이 형태·점도와 식사 자세 중재를 적용한다.</li>
+<li>흡인·기도폐쇄 응급상황에 대처한다.</li>
+<li>환자·보호자 교육을 효과적으로 수행한다.</li></ol>
+<p>소요시간 약 30분 · 총 100점 (사정 20, 식이 20, 중재 20, 응급 20, 교육 20) · 자기주도적으로 진행하며 각 단계에서 즉시 피드백이 제공됩니다.</p></div>
+<div class="card"><h2>👤 사례 소개</h2>
+<table><tr><th>대상자</th><td>이곤란 님, 78세 남성, 퇴직 교사, 아내와 거주</td></tr>
+<tr><th>진단</th><td>좌측 중대뇌동맥(MCA) 급성 뇌경색 (발병 3일째)</td></tr>
+<tr><th>과거력</th><td>고혈압 15년, 2형 당뇨 10년, 심방세동(항응고제 중단 이력)</td></tr>
+<tr><th>주요 증상</th><td>우측 편마비(상지 3/5, 하지 4/5), 경도 구음장애, 식사 중 사레 및 젖은 목소리</td></tr>
+<tr><th>활력징후</th><td>BP 148/86, HR 82(불규칙), RR 18, BT 36.7℃, SpO₂ 96%</td></tr>
+<tr><th>영양</th><td>키 168cm, 체중 59kg(입원 전 64kg), 알부민 3.2 g/dL</td></tr>
+<tr><th>환자 발언</th><td>“밥을 먹으면 자꾸 사레가 들려서 먹기 겁나요. 그냥 물이랑 국만 먹고 싶어요.”</td></tr></table>
+<p class="warn">※ 본 사례는 교육용 가상사례입니다. 실제 임상에서는 기관 프로토콜과 의료진 처방을 따르세요.</p>
+<label>학습자 이름(선택): <input id="nm" style="padding:6px"></label><br>
+<button onclick="S.name=document.getElementById('nm').value;go(1)">학습 시작 ▶</button></div>`}
+function quiz(a,q){
+ let sel=new Set(),done=false;
+ a.innerHTML=`<div class="card"><h2>${q.title}</h2><p>${q.stem}</p>${q.extra?`<p class="warn">${q.extra}</p>`:""}
+ <div id="o">${q.opts.map((o,i)=>`<button class="opt" data-i="${i}">${o[0]}</button>`).join("")}</div>
+ <button id="sub">${q.multi?"제출":"선택하세요"}</button><div class="fb" id="fb"></div>
+ <button id="nx" class="o" style="display:none">다음 ▶</button></div>`;
+ const btns=[...a.querySelectorAll(".opt")];
+ btns.forEach(b=>b.onclick=()=>{if(done)return;const i=+b.dataset.i;
+  if(q.multi){sel.has(i)?sel.delete(i):sel.add(i);b.classList.toggle("sel")}
+  else{sel=new Set([i]);btns.forEach(x=>x.classList.remove("sel"));b.classList.add("sel");document.getElementById("sub").textContent="제출"}});
+ document.getElementById("sub").onclick=()=>{if(done||!sel.size)return;done=true;
+  let sc=0,html="";
+  if(q.multi){q.opts.forEach((o,i)=>{const good=o[1]>0;
+    if(sel.has(i))sc+=o[1];
+    if(good)btns[i].classList.add("right");else if(sel.has(i))btns[i].classList.add("wrong");
+    html+=`<div>${sel.has(i)?"▶ ":""}${o[2]}</div>`});
+   sc=Math.max(0,Math.min(q.max,sc))}
+  else{const i=[...sel][0];sc=q.opts[i][1];
+   q.opts.forEach((o,k)=>{if(o[1]==q.max)btns[k].classList.add("right")});
+   if(q.opts[i][1]<q.max)btns[i].classList.add("wrong");
+   html=`<b>선택 피드백:</b> ${q.opts[i][2]}`}
+  S.score[q.id]=sc;S.log.push([q.title,sc,q.max]);
+  const fb=document.getElementById("fb");fb.style.display="block";
+  fb.innerHTML=`<b>${sc} / ${q.max}점</b><br>${html}`;
+  document.getElementById("nx").style.display="inline-block"};
+ document.getElementById("nx").onclick=()=>go(S.step+1)}
+function edu(a){
+ const q=Q[4];S.cov=new Set();
+ a.innerHTML=`<div class="card"><h2>${q.title}</h2>
+ <p>이곤란 님과 아내가 퇴원 후 식사 방법을 배우려 합니다. <b>간호사가 되어</b> 아래 대화창에 교육 내용을 한 문장씩 입력해 보세요. 환자가 반응합니다. (예: “식사할 때는 의자에 바르게 앉아 턱을 당기세요.”)</p>
+ <div class="chat" id="ch"><div class="m pt">“간호사님, 집에 가면 식사는 어떻게 해야 하나요? 물이랑 국이 제일 편한데…”</div></div>
+ <textarea id="tx" placeholder="교육 내용을 입력하세요 (Enter: 전송 / Shift+Enter: 줄바꿈)"></textarea>
+ <button id="sd">전송</button> <button class="o" id="hint">힌트</button>
+ <div id="tg" style="margin:8px 0"></div>
+ <p><small>교육 요소 10가지 중 <b>6개 이상</b> 다루면 충분합니다. 각 요소 2점(최대 20점). 자기평가 후 [평가 보기]로 이동하세요.</small></p>
+ <button id="fin" class="o">평가 결과 보기 ▶</button></div>`;
+ const ch=document.getElementById("ch"),tx=document.getElementById("tx");
+ const tg=()=>document.getElementById("tg").innerHTML=KW.map(k=>`<span class="tag ${S.cov.has(k[0])?"on":""}">${S.cov.has(k[0])?"✔ ":""}${KWL[k[0]]}</span>`).join("");tg();
+ const add=(c,t)=>{ch.innerHTML+=`<div class="m ${c}">${t}</div>`;ch.scrollTop=ch.scrollHeight};
+ const send=()=>{const t=tx.value.trim();if(!t)return;tx.value="";add("s",t.replace(/</g,"&lt;"));
+  const nw=[];KW.forEach(k=>{if(new RegExp(k[1]).test(t)&&!S.cov.has(k[0])){S.cov.add(k[0]);nw.push(k[0])}});
+  let r;
+  if(/모르|몰라|그냥 드세요|알아서/.test(t)&&!nw.length)r="“그래도 구체적으로 알려주셔야 저희가 따라 할 수 있어요.”";
+  else if(nw.length)r=nw.map(k=>REPLY[k]).join("<br>");
+  else if(t.length<8)r="“좀 더 자세히 설명해 주시겠어요?”";
+  else r="“네… 그런데 구체적으로 식사할 때 어떻게 하면 되나요? (자세, 양, 속도, 음식 형태 등)”";
+  if(!/(걱정|힘드|괜찮|이해|불안|무서)/.test(t)){}else r+="<br>“이렇게 마음을 알아주셔서 고맙습니다.”";
+  setTimeout(()=>add("pt",r),350);tg()};
+ document.getElementById("sd").onclick=send;
+ tx.onkeydown=e=>{if(e.key=="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
+ document.getElementById("hint").onclick=()=>{const m=KW.filter(k=>!S.cov.has(k[0]));add("pt",m.length?`💡 아직 다루지 않은 주제: ${m.slice(0,3).map(k=>KWL[k[0]]).join(", ")}`:"💡 모든 요소를 다뤘습니다!")};
+ document.getElementById("fin").onclick=()=>{S.score.edu=Math.min(20,S.cov.size*2);S.log=S.log.filter(l=>l[0]!==q.title);S.log.push([q.title,S.score.edu,20]);go(6)}}
+function result(a){
+ const tot=Object.values(S.score).reduce((x,y)=>x+y,0);
+ const lv=tot>=90?"우수":tot>=80?"양호":tot>=70?"보통(보완 필요)":"미흡(재학습 권장)";
+ const miss=KW.filter(k=>!S.cov.has(k[0])).map(k=>KWL[k[0]]);
+ a.innerHTML=`<div class="card"><h2>📊 평가 결과 ${S.name?"· "+S.name:""}</h2>
+ <p style="font-size:1.6rem;margin:0"><b>${tot}</b> / 100점 — ${lv}</p>
+ <table><tr><th>단계</th><th>점수</th><th>성취수준</th></tr>
+ ${S.log.map(l=>`<tr><td>${l[0]}</td><td>${l[1]}/${l[2]}</td><td>${l[1]>=l[2]*0.8?"충족":l[1]>=l[2]*0.5?"부분충족":"미흡"}</td></tr>`).join("")}</table>
+ <h3>맞춤 피드백</h3><ul>
+ ${S.log.filter(l=>l[1]<l[2]*0.8).map(l=>`<li>${l[0]} 재학습 필요</li>`).join("")||"<li>모든 영역에서 목표를 충족했습니다.</li>"}
+ ${miss.length?`<li>교육 시 누락한 요소: ${miss.join(", ")}</li>`:""}</ul>
+ <h3>성찰 질문 (자기평가)</h3>
+ <ol><li>이곤란 님의 두려움과 요구(“물·국이 편하다”)를 어떻게 존중하면서 안전을 설명할 수 있을까?</li>
+ <li>퇴원 후 가정에서 흡인성 폐렴을 조기 발견하기 위한 보호자 교육 내용은?</li>
+ <li>다학제팀(의사, 언어치료사, 영양사, 작업치료사)과의 협력 방법은?</li></ol>
+ <textarea placeholder="성찰 내용을 기록하세요"></textarea>
+ <button onclick="window.print()">결과 인쇄/PDF 저장</button><button class="o" onclick="location.reload()">다시 학습</button></div>`}
+render();
+</script></body></html>
